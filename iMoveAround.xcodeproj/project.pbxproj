@@ -21,6 +21,7 @@
 		C38A782E18CED10B00BCA43E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C38A781018CED10A00BCA43E /* UIKit.framework */; };
 		C38A783618CED10B00BCA43E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C38A783418CED10B00BCA43E /* InfoPlist.strings */; };
 		C38A783818CED10B00BCA43E /* iMoveAroundTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C38A783718CED10B00BCA43E /* iMoveAroundTests.m */; };
+		C38A784218CED15400BCA43E /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C38A784118CED15400BCA43E /* CoreMotion.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		C38A783318CED10B00BCA43E /* iMoveAroundTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iMoveAroundTests-Info.plist"; sourceTree = "<group>"; };
 		C38A783518CED10B00BCA43E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C38A783718CED10B00BCA43E /* iMoveAroundTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iMoveAroundTests.m; sourceTree = "<group>"; };
+		C38A784118CED15400BCA43E /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C38A784218CED15400BCA43E /* CoreMotion.framework in Frameworks */,
 				C38A780F18CED10A00BCA43E /* CoreGraphics.framework in Frameworks */,
 				C38A781118CED10A00BCA43E /* UIKit.framework in Frameworks */,
 				C38A780D18CED10A00BCA43E /* Foundation.framework in Frameworks */,
@@ -101,6 +104,7 @@
 		C38A780B18CED10A00BCA43E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C38A784118CED15400BCA43E /* CoreMotion.framework */,
 				C38A780C18CED10A00BCA43E /* Foundation.framework */,
 				C38A780E18CED10A00BCA43E /* CoreGraphics.framework */,
 				C38A781018CED10A00BCA43E /* UIKit.framework */,
@@ -199,6 +203,13 @@
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Karl Gallagher";
 				TargetAttributes = {
+					C38A780818CED10A00BCA43E = {
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
+					};
 					C38A782918CED10B00BCA43E = {
 						TestTargetID = C38A780818CED10A00BCA43E;
 					};
