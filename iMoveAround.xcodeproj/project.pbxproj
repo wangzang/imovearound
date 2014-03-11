@@ -467,6 +467,7 @@
 				C38A783D18CED10B00BCA43E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C38A783E18CED10B00BCA43E /* Build configuration list for PBXNativeTarget "iMoveAroundTests" */ = {
 			isa = XCConfigurationList;
@@ -475,6 +476,7 @@
 				C38A784018CED10B00BCA43E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

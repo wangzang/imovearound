@@ -85,6 +85,17 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
         float countDownDuration = [[NSUserDefaults standardUserDefaults] floatForKey:COUNTDOWN_KEY];
 
         NSLog(@"Initiating repeat keepAliveTimeout for %f seconds. ", countDownDuration);
+
+
+//        __weak typeof(self) weakSelf = self;
+//        if (![self setTimer:countDownDuration handler:^{
+//            [weakSelf initiateCounterQuery:true];
+//        }])
+//        {
+//            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
+//        }
+
+        
         if (![[UIApplication sharedApplication] setKeepAliveTimeout:countDownDuration handler:^{
             [self initiateCounterQuery:true];
         }])
@@ -241,6 +252,18 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
     return @"";//required elements
 }
 
+- (BOOL)setTimer:(NSTimeInterval)timeout handler:(void(^)(void))timerHandler NS_AVAILABLE_IOS(4_0)
+{
+    if (![[UIApplication sharedApplication] setKeepAliveTimeout:timeout handler:^{
+        timerHandler();
+    }])
+    {
+        [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
+        return false;
+    }
+
+    return true;
+}
 
 
 @end
