@@ -82,8 +82,10 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
             [self triggerNotification:[NSString stringWithFormat:@"%li steps! Doing Well!", (long)numberOfSteps] ];
         }
         
-        NSLog(@"Initiating repeat keepAliveTimeout for %f seconds. ", self.countDownTimer.countDownDuration);
-        if (![[UIApplication sharedApplication] setKeepAliveTimeout:self.countDownTimer.countDownDuration handler:^{
+        float countDownDuration = [[NSUserDefaults standardUserDefaults] floatForKey:COUNTDOWN_KEY];
+
+        NSLog(@"Initiating repeat keepAliveTimeout for %f seconds. ", countDownDuration);
+        if (![[UIApplication sharedApplication] setKeepAliveTimeout:countDownDuration handler:^{
             [self initiateCounterQuery:true];
         }])
         {
@@ -99,8 +101,10 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
     if (!self.stepCounter)
         self.stepCounter = [[CMStepCounter alloc] init];
     
+    float countDownDuration = [[NSUserDefaults standardUserDefaults] floatForKey:COUNTDOWN_KEY];
+
     NSDate *now = [NSDate date];
-    NSDate *from = [NSDate dateWithTimeInterval:-self.countDownTimer.countDownDuration sinceDate:now];
+    NSDate *from = [NSDate dateWithTimeInterval:-countDownDuration sinceDate:now];
     
     __weak typeof(self) weakSelf = self;
     [self.stepCounter queryStepCountStartingFrom:from
