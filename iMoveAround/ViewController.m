@@ -30,6 +30,8 @@ NSString *STEPS_KEY=@"theStepsKey";
 NSString *COUNTDOWN_KEY=@"theCountDownKey";
 NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
 
+UIBackgroundTaskIdentifier bgTask = 0;
+
 
 - (void)viewDidLoad
 {
@@ -44,15 +46,6 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
     
 	// Do any additional setup after loading the view, typically from a nib.
     [self initiateCounterQuery:false];
-    
-    //    UIBackgroundTaskIdentifier bgTask = 0;
-    //    UIApplication  *app = [UIApplication sharedApplication];
-    //    bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
-    //        [app endBackgroundTask:bgTask];
-    //    }];
-    //    self.silenceTimer = [NSTimer scheduledTimerWithTimeInterval:300 target:self
-    //                                                       selector:@selector(startLocationServices) userInfo:nil repeats:YES];
-    
 }
 
 
@@ -87,21 +80,21 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
         NSLog(@"Initiating repeat keepAliveTimeout for %f seconds. ", countDownDuration);
 
 
-//        __weak typeof(self) weakSelf = self;
-//        if (![self setTimer:countDownDuration handler:^{
-//            [weakSelf initiateCounterQuery:true];
+        __weak typeof(self) weakSelf = self;
+        if (![self setTimer:countDownDuration handler:^{
+            [weakSelf initiateCounterQuery:true];
+        }])
+        {
+           [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer!"] ];
+        }
+
+        
+//        if (![[UIApplication sharedApplication] setKeepAliveTimeout:countDownDuration handler:^{
+//            [self initiateCounterQuery:true];
 //        }])
 //        {
 //            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
 //        }
-
-        
-        if (![[UIApplication sharedApplication] setKeepAliveTimeout:countDownDuration handler:^{
-            [self initiateCounterQuery:true];
-        }])
-        {
-            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
-        }
         
         
     }
@@ -143,27 +136,37 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
     NSLog(@"datePicker.countDownDuration: %f", self.countDownTimer.countDownDuration);
     
     //interval can't be less than 10 minutes, so lets make sure we make that the minimum.
-    if (self.countDownTimer.countDownDuration < 600)
-        self.countDownTimer.countDownDuration = 600;
+//    if (self.countDownTimer.countDownDuration < 600)
+//        self.countDownTimer.countDownDuration = 600;
+    //let it be <600 for testing, also, since we may use timers, this limitation might not be necessary.
     
     [self initiateCounterQuery:false];
     
     NSLog(@"Initiating new keepAliveTimeout for %f seconds", self.countDownTimer.countDownDuration);
     
-    
-    if (![[UIApplication sharedApplication] setKeepAliveTimeout:self.countDownTimer.countDownDuration handler:^{
-        [self initiateCounterQuery:true];
+
+    __weak typeof(self) weakSelf = self;
+    if (![self setTimer:self.countDownTimer.countDownDuration handler:^{
+        [weakSelf initiateCounterQuery:true];
     }])
     {
-        [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
+        [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer!"] ];
     }
+
+    
+//    if (![[UIApplication sharedApplication] setKeepAliveTimeout:self.countDownTimer.countDownDuration handler:^{
+//        [self initiateCounterQuery:true];
+//    }])
+//    {
+//        [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
+//    }
     
     NSInteger minimumStepCount = [[NSUserDefaults standardUserDefaults] integerForKey:MINIMUM_STEPS_KEY];
     
     NSDate *now = [NSDate date];
     NSDate *then = [NSDate dateWithTimeInterval:self.countDownTimer.countDownDuration sinceDate:now];
     
-    NSLog(@"Countdown set for %li steps in %f seconds, so by %@. It is now %@", minimumStepCount, self.countDownTimer.countDownDuration, then, now);
+    NSLog(@"Countdown set for %li steps in %f seconds, so by %@. It is now %@", (long)minimumStepCount, self.countDownTimer.countDownDuration, then, now);
     
     [[NSUserDefaults standardUserDefaults] setFloat:self.countDownTimer.countDownDuration forKey:COUNTDOWN_KEY];
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -246,7 +249,7 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
 {
     if (component == 0 )
     {
-        return [NSString stringWithFormat:@"%ld",(row)];
+        return [NSString stringWithFormat:@"%ld",(long)(row)];
     }
     
     return @"";//required elements
@@ -254,15 +257,54 @@ NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
 
 - (BOOL)setTimer:(NSTimeInterval)timeout handler:(void(^)(void))timerHandler NS_AVAILABLE_IOS(4_0)
 {
-    if (![[UIApplication sharedApplication] setKeepAliveTimeout:timeout handler:^{
-        timerHandler();
-    }])
-    {
-        [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
-        return false;
-    }
 
+    //if timeout is longer than 10 minutes, we need to set a keepAlive timer.
+    //otherwise, we can use a normal timer.
+    if (timeout > 600.0f)
+    {
+        if (![[UIApplication sharedApplication] setKeepAliveTimeout:timeout handler:^{
+            timerHandler();
+        }])
+        {
+            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer keepAlive!"] ];
+            return false;
+        }
+        return true;
+    }
+    
+    UIApplication*    app = [UIApplication sharedApplication];
+    
+    bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
+        [app endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
+    
+    // Start the long-running task and return immediately.
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        // Do the work associated with the task.
+        [self startTimerAction:timeout handler:timerHandler];
+        [app endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    });
     return true;
+}
+
+-(void)startTimerAction:(NSTimeInterval)timeout handler:(void(^)(void))timerHandler
+{
+    NSLog(@"Started timerAction!");
+    [NSTimer scheduledTimerWithTimeInterval:2.0
+                                     target:self
+     //i can't figure out how to get the timer to take a callback to the pointer. ugh.
+     //                                   selector:@selector(aMethod:timerHandler:)
+                                   userInfo:nil
+                                    repeats:NO];
+}
+
+-(void)aMethod:(void(^)(void))methodHandler
+{
+    NSLog(@"Made it into the timerHandler!");
+    methodHandler();
 }
 
 
