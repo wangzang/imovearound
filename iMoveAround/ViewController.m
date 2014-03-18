@@ -78,10 +78,10 @@ UIBackgroundTaskIdentifier bgTask = 0;
         NSLog(@"Initiating repeat setTimer for %f seconds. ", countDownDuration);
 
 
-        __weak typeof(self) weakSelf = self;
-        if (![self setTimer:countDownDuration handler:^{
-            [weakSelf initiateCounterQuery:true];
-        }])
+        NSDate *now = [NSDate date];
+        NSDate *then = [NSDate dateWithTimeInterval:countDownDuration sinceDate:now];
+
+        if (![self setTimer:then])
         {
            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer!"] ];
         }
@@ -105,20 +105,23 @@ UIBackgroundTaskIdentifier bgTask = 0;
     
     float countDownDuration = [[NSUserDefaults standardUserDefaults] floatForKey:COUNTDOWN_KEY];
 
+    NSLog(@"CountDownDuration = %f", countDownDuration);
+    
     NSDate *now = [NSDate date];
     NSDate *from = [NSDate dateWithTimeInterval:-countDownDuration sinceDate:now];
     
-    __weak typeof(self) weakSelf = self;
+//    __weak typeof(self) weakSelf = self;
     [self.stepCounter queryStepCountStartingFrom:from
                                               to:now
                                          toQueue:[NSOperationQueue mainQueue]
                                      withHandler:^(NSInteger numberOfSteps, NSError *error) {
                                          [[NSUserDefaults standardUserDefaults] setInteger:numberOfSteps forKey:STEPS_KEY];
                                          NSLog(@"initiateCounterQuery reported steps: %li. notification: %s", (long)numberOfSteps, notification?"true":"false");
+                                         NSLog(@"Between %@ and %@", from, now);
                                          [self updateStepCount:notification from:from];
                                      }];
-    NSLog(@"queryStepCount returned %ld steps", (long)weakSelf.title);
-    NSLog(@"Between %@ and %@", from, now);
+//    NSLog(@"queryStepCount returned %ld steps", (long)weakSelf.title);
+//    NSLog(@"Between %@ and %@", from, now);
 }
 
 
@@ -131,38 +134,26 @@ UIBackgroundTaskIdentifier bgTask = 0;
 
 
 - (IBAction)updateCountdown:(id)sender {
-    NSLog(@"datePicker.countDownDuration: %f", self.countDownTimerPicker.countDownDuration);
+    //NSLog(@"datePicker.countDownDuration: %f", self.countDownTimerPicker.countDownDuration);
+
+    [[NSUserDefaults standardUserDefaults] setFloat:self.countDownTimerPicker.countDownDuration forKey:COUNTDOWN_KEY];
+    [[NSUserDefaults standardUserDefaults] synchronize];
     
     [self initiateCounterQuery:false];
     
-    NSLog(@"Initiating new setTimer for %f seconds", self.countDownTimerPicker.countDownDuration);
+    NSLog(@"updateCountdown: initiating new setTimer: %f seconds", self.countDownTimerPicker.countDownDuration);
     
+    NSDate *now = [NSDate date];
+    NSDate *then = [NSDate dateWithTimeInterval:self.countDownTimerPicker.countDownDuration sinceDate:now];
 
-    __weak typeof(self) weakSelf = self;
-    if (![self setTimer:self.countDownTimerPicker.countDownDuration handler:^{
-        [weakSelf initiateCounterQuery:true];
-    }])
+    if (![self setTimer:then])
     {
         [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer!"] ];
     }
 
+//    NSInteger minimumStepCount = [[NSUserDefaults standardUserDefaults] integerForKey:MINIMUM_STEPS_KEY];
+//    NSLog(@"Countdown set for %li steps in %f seconds, so by %@. It is now %@", (long)minimumStepCount, self.countDownTimerPicker.countDownDuration, then, now);
     
-//    if (![[UIApplication sharedApplication] setKeepAliveTimeout:self.countDownTimerPicker.countDownDuration handler:^{
-//        [self initiateCounterQuery:true];
-//    }])
-//    {
-//        [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
-//    }
-    
-    NSInteger minimumStepCount = [[NSUserDefaults standardUserDefaults] integerForKey:MINIMUM_STEPS_KEY];
-    
-    NSDate *now = [NSDate date];
-    NSDate *then = [NSDate dateWithTimeInterval:self.countDownTimerPicker.countDownDuration sinceDate:now];
-    
-    NSLog(@"Countdown set for %li steps in %f seconds, so by %@. It is now %@", (long)minimumStepCount, self.countDownTimerPicker.countDownDuration, then, now);
-    
-    [[NSUserDefaults standardUserDefaults] setFloat:self.countDownTimerPicker.countDownDuration forKey:COUNTDOWN_KEY];
-    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (void)updateTimer
@@ -179,7 +170,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
     localNotification.fireDate = [NSDate date];
     localNotification.alertBody = alertString;
     localNotification.timeZone = [NSTimeZone defaultTimeZone];
-//    [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
+    [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
     NSLog(@"Notification Text: %@", alertString);
 }
 
@@ -214,8 +205,6 @@ UIBackgroundTaskIdentifier bgTask = 0;
     }
 }
 
-
-
 -(void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
     NSLog(@"Minimum Step Count = %ld", (long)row);
@@ -244,20 +233,31 @@ UIBackgroundTaskIdentifier bgTask = 0;
     return @"";//required elements
 }
 
-- (BOOL)setTimer:(NSTimeInterval)timeout handler:(void(^)(void))timerHandler NS_AVAILABLE_IOS(4_0)
+- (BOOL)setTimer:(NSDate*)alarmTime
 {
+    NSDate *now = [NSDate date];
+    NSTimeInterval timeout = [alarmTime timeIntervalSinceDate:now];
+    NSLog(@"Timeout is %f", timeout);
 
     //if timeout is longer than 10 minutes, we need to set a keepAlive timer.
     //otherwise, we can use a normal timer.
     if (timeout > 600.0f)
     {
+        //make sure the <600 second timer isn't running.
+        if (countDownTimer != nil) {
+            if([countDownTimer isValid]){
+                [countDownTimer invalidate];
+            }
+            countDownTimer = nil;
+        }
         if (![[UIApplication sharedApplication] setKeepAliveTimeout:timeout handler:^{
-            timerHandler();
+        [self setTimer:alarmTime];
         }])
         {
             [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer keepAlive!"] ];
             return false;
         }
+        NSLog(@"Starting setKeepAliveTimeout for %f seconds", timeout);
         return true;
     }
     
@@ -265,25 +265,16 @@ UIBackgroundTaskIdentifier bgTask = 0;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         // Do the work associated with the task.
-        [self startTimerAction:timeout handler:timerHandler];
+        [self startTimerAction:timeout];
     });
     return true;
 }
 
--(void)startTimerAction:(NSTimeInterval)timeout handler:(void(^)(void))timerHandler
+-(void)startTimerAction:(NSTimeInterval)timeout
 {
     NSLog(@"Started timerAction for %f seconds!", timeout);
 
-/*    [NSTimer scheduledTimerWithTimeInterval:2.0
-                                     target:self
-     //i can't figure out how to get the timer to take a callback to the pointer. ugh.
-                                    selector:@selector(aMethod:timerHandler:)
-                                   userInfo:nil
-                                    repeats:NO];
-  */
-    
     UIApplication*    app = [UIApplication sharedApplication];
-    
     bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
         [app endBackgroundTask:bgTask];
         bgTask = UIBackgroundTaskInvalid;
@@ -298,38 +289,20 @@ UIBackgroundTaskIdentifier bgTask = 0;
                                          userInfo:nil
                                           repeats:NO];
         
-        
-        //i need to start the timer, but there seems to be an infinite loop somewhere.
         [[NSRunLoop mainRunLoop] addTimer:countDownTimer forMode:NSDefaultRunLoopMode];
         //[countDownTimer fire];
-        NSLog(@"Countdown Timer started, and it's = %p", countDownTimer);
+//        NSLog(@"Countdown Timer started, and it's = %p", countDownTimer);
     });
-
-
 }
 
 -(void)aMethod
 {
-    NSLog(@"Made it into the timerHandler initiating counter Query with notifications!");
-
-//    [_countDownTimer invalidate];
-//    _countDownTimer = nil;
-
-    
-    if (countDownTimer != nil) {
-        if([countDownTimer isValid]){
-            [countDownTimer invalidate];
-        }
-        countDownTimer = nil;
-        NSLog(@"Invalidated timer");
-    }
-
+//    NSLog(@"Made it into the timerHandler initiating counter Query with notifications!");
     [self initiateCounterQuery:true];
 
     UIApplication*    app = [UIApplication sharedApplication];
     [app endBackgroundTask:bgTask];
     bgTask = UIBackgroundTaskInvalid;
-
 }
 
 @end
