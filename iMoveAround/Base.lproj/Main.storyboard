@@ -80,7 +80,7 @@ AQABAAEAAQAB//+dkAEA//+PgAAE//+dkAEI//+dkAEMUERUAFBTVABQV1QAUFBUAAAAAAEAAAABA
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                     <connections>
-                        <outlet property="countDownTimer" destination="PPu-n5-QBG" id="OHe-hJ-EQ8"/>
+                        <outlet property="countDownTimerPicker" destination="PPu-n5-QBG" id="2Ai-qx-pYM"/>
                         <outlet property="minimumStepCountPicker" destination="bEZ-8h-Ovv" id="O1V-pq-cgV"/>
                         <outlet property="stepLabel" destination="JOU-7s-cgf" id="Vih-EX-Eny"/>
                     </connections>

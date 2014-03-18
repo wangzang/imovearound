@@ -8,12 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
-NSTimer *silenceTimer;
+NSTimer *countDownTimer;
 
 @interface ViewController : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource>
 
 @property (weak, nonatomic) IBOutlet UIPickerView *minimumStepCountPicker;
-
-//@property (nonatomic, retain) NSTimer *silenceTimer;
+@property (nonatomic, retain) NSTimer *countDownTimer;
 
 @end
