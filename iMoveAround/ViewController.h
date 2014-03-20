@@ -15,4 +15,6 @@ NSTimer *countDownTimer;
 @property (weak, nonatomic) IBOutlet UIPickerView *minimumStepCountPicker;
 @property (nonatomic, retain) NSTimer *countDownTimer;
 
+- (void)triggerNotification:(NSString *)alertString;
+
 @end

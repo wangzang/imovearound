@@ -21,9 +21,6 @@
 
 @implementation ViewController
 
-
-
-
 NSString *STEPS_KEY=@"theStepsKey";
 NSString *COUNTDOWN_KEY=@"theCountDownKey";
 NSString *MINIMUM_STEPS_KEY=@"theMinimumStepsKey";
@@ -85,16 +82,6 @@ UIBackgroundTaskIdentifier bgTask = 0;
         {
            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer!"] ];
         }
-
-        
-//        if (![[UIApplication sharedApplication] setKeepAliveTimeout:countDownDuration handler:^{
-//            [self initiateCounterQuery:true];
-//        }])
-//        {
-//            [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate keepAlive!"] ];
-//        }
-        
-        
     }
 }
 
@@ -110,7 +97,6 @@ UIBackgroundTaskIdentifier bgTask = 0;
     NSDate *now = [NSDate date];
     NSDate *from = [NSDate dateWithTimeInterval:-countDownDuration sinceDate:now];
     
-//    __weak typeof(self) weakSelf = self;
     [self.stepCounter queryStepCountStartingFrom:from
                                               to:now
                                          toQueue:[NSOperationQueue mainQueue]
@@ -120,18 +106,13 @@ UIBackgroundTaskIdentifier bgTask = 0;
                                          NSLog(@"Between %@ and %@", from, now);
                                          [self updateStepCount:notification from:from];
                                      }];
-//    NSLog(@"queryStepCount returned %ld steps", (long)weakSelf.title);
-//    NSLog(@"Between %@ and %@", from, now);
 }
-
-
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resourc    es that can be recreated.
+    // Dispose of any resources that can be recreated.
 }
-
 
 - (IBAction)updateCountdown:(id)sender {
     //NSLog(@"datePicker.countDownDuration: %f", self.countDownTimerPicker.countDownDuration);
@@ -150,10 +131,6 @@ UIBackgroundTaskIdentifier bgTask = 0;
     {
         [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer!"] ];
     }
-
-//    NSInteger minimumStepCount = [[NSUserDefaults standardUserDefaults] integerForKey:MINIMUM_STEPS_KEY];
-//    NSLog(@"Countdown set for %li steps in %f seconds, so by %@. It is now %@", (long)minimumStepCount, self.countDownTimerPicker.countDownDuration, then, now);
-    
 }
 
 - (void)updateTimer
@@ -210,6 +187,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
     NSLog(@"Minimum Step Count = %ld", (long)row);
     [[NSUserDefaults standardUserDefaults] setInteger:row forKey:MINIMUM_STEPS_KEY];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    [self writeLog:@"OMG MIN STEP COUNT"];
 }
 
 //none of this shit works. i'm trying to make a picker that just shows a bunch of numbers for the "minimumStepCount"
@@ -285,7 +263,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
         // Do the work associated with the task.
         countDownTimer = [NSTimer timerWithTimeInterval:timeout
                                            target:self
-                                         selector:@selector(aMethod)
+                                         selector:@selector(timerAlarmHandler)
                                          userInfo:nil
                                           repeats:NO];
         
@@ -295,14 +273,46 @@ UIBackgroundTaskIdentifier bgTask = 0;
     });
 }
 
--(void)aMethod
+-(void)timerAlarmHandler
 {
-//    NSLog(@"Made it into the timerHandler initiating counter Query with notifications!");
+//    NSLog(@"Made it into the timerAlarmHandler initiating counter Query with notifications!");
     [self initiateCounterQuery:true];
 
     UIApplication*    app = [UIApplication sharedApplication];
     [app endBackgroundTask:bgTask];
     bgTask = UIBackgroundTaskInvalid;
+}
+
+//FOUNDATION_EXPORT void NSLog(NSString *format, ...) NS_FORMAT_FUNCTION(1,2);
+
+-(void)writeLog:(NSString*)logString
+{
+    //NSString *logString = @"This is my log";
+    
+    //Get the file path
+    NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *fileName = [documentsDirectory stringByAppendingPathComponent:@"myFileName.txt"];
+    
+    //create file if it doesn't exist
+    if(![[NSFileManager defaultManager] fileExistsAtPath:fileName])
+        [[NSFileManager defaultManager] createFileAtPath:fileName contents:nil attributes:nil];
+    
+    //append text to file (you'll probably want to add a newline every write)
+    NSFileHandle *file = [NSFileHandle fileHandleForUpdatingAtPath:fileName];
+    [file seekToEndOfFile];
+    [file writeData:[logString dataUsingEncoding:NSUTF8StringEncoding]];
+    [file closeFile];
+}
+
+-(void)readLog
+{
+    //get file path
+    NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *fileName = [documentsDirectory stringByAppendingPathComponent:@"myFileName.txt"];
+    
+    //read the whole file as a single string
+    NSString *content = [NSString stringWithContentsOfFile:fileName encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"content is: %@", content);
 }
 
 @end
