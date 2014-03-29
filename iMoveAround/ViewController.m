@@ -1,6 +1,6 @@
 //
 //  ViewController.m
-//  SingleViewApplication
+//  iMoveAround
 //
 //  Created by Karl Gallagher on 3/1/14.
 //  Copyright (c) 2014 Karl Gallagher. All rights reserved.
@@ -54,7 +54,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
             self.stepLabel.text = [NSString stringWithFormat:@"Steps: %li", (long)numberOfSteps];
         });
     
-    NSLog(@"updateStepCount updated steps to: %li. Notification? %s", (long)numberOfSteps, notification?"true":"false");
+    NSLog(@"updateStepCount: updated steps to: %li. Notification? %s", (long)numberOfSteps, notification?"true":"false");
     
     if (notification)
     {
@@ -72,7 +72,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
         
         float countDownDuration = [[NSUserDefaults standardUserDefaults] floatForKey:COUNTDOWN_KEY];
 
-        NSLog(@"Initiating repeat setTimer for %f seconds. ", countDownDuration);
+        NSLog(@"updateStepCount: Initiating repeat setTimer for %f seconds. ", countDownDuration);
 
 
         NSDate *now = [NSDate date];
@@ -92,7 +92,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
     
     float countDownDuration = [[NSUserDefaults standardUserDefaults] floatForKey:COUNTDOWN_KEY];
 
-    NSLog(@"CountDownDuration = %f", countDownDuration);
+    NSLog(@"initiateCounterQuery: CountDownDuration = %f", countDownDuration);
     
     NSDate *now = [NSDate date];
     NSDate *from = [NSDate dateWithTimeInterval:-countDownDuration sinceDate:now];
@@ -102,7 +102,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
                                          toQueue:[NSOperationQueue mainQueue]
                                      withHandler:^(NSInteger numberOfSteps, NSError *error) {
                                          [[NSUserDefaults standardUserDefaults] setInteger:numberOfSteps forKey:STEPS_KEY];
-                                         NSLog(@"initiateCounterQuery reported steps: %li. notification: %s", (long)numberOfSteps, notification?"true":"false");
+                                         NSLog(@"initiateCounterQuery: reported steps: %li. notification: %s", (long)numberOfSteps, notification?"true":"false");
                                          NSLog(@"Between %@ and %@", from, now);
                                          [self updateStepCount:notification from:from];
                                      }];
@@ -138,7 +138,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
     NSInteger numberOfSteps = [[NSUserDefaults standardUserDefaults] integerForKey:STEPS_KEY];
     // doing %li and (long) so that we're safe for 64-bit
     self.stepLabel.text = [NSString stringWithFormat:@"%li", (long)numberOfSteps];
-    NSLog(@"steps updated to: %li", (long)numberOfSteps);
+    NSLog(@"updateTimer: steps updated to: %li", (long)numberOfSteps);
 }
 
 - (void)triggerNotification:(NSString *)alertString
@@ -215,7 +215,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
 {
     NSDate *now = [NSDate date];
     NSTimeInterval timeout = [alarmTime timeIntervalSinceDate:now];
-    NSLog(@"Timeout is %f", timeout);
+    NSLog(@"setTimer: Timeout is %f", timeout);
 
     //if timeout is longer than 10 minutes, we need to set a keepAlive timer.
     //otherwise, we can use a normal timer.
@@ -235,7 +235,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
             [self triggerNotification:[NSString stringWithFormat:@"Failed to initiate setTimer keepAlive!"] ];
             return false;
         }
-        NSLog(@"Starting setKeepAliveTimeout for %f seconds", timeout);
+        NSLog(@"setTimer: Starting setKeepAliveTimeout for %f seconds", timeout);
         return true;
     }
     
@@ -250,8 +250,9 @@ UIBackgroundTaskIdentifier bgTask = 0;
 
 -(void)startTimerAction:(NSTimeInterval)timeout
 {
-    NSLog(@"Started timerAction for %f seconds!", timeout);
+    NSLog(@"startTimerAction: for %f seconds!", timeout);
 
+    /* this should be getting done when the app goes to shut down and sees that a timer is still active.*/
     UIApplication*    app = [UIApplication sharedApplication];
     bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
         [app endBackgroundTask:bgTask];

@@ -15,6 +15,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    NSLog(@"didFinishLaunchingWithOptions called.");
     // Override point for customization after application launch.
     return YES;
 }
@@ -30,15 +31,17 @@
 
     if (countDownTimer != nil)
     {
-        NSLog(@"Timer still going, add background task!");
+        NSLog(@"applicationWillResignActive: Timer still going, add background task!");
         UIBackgroundTaskIdentifier bgTask;
         UIApplication  *app = [UIApplication sharedApplication];
+//        NSLog(@"bgTask: %lu", (unsigned long)bgTask);
         bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
             [app endBackgroundTask:bgTask];
         }];
+        NSLog(@"bgTask after: %lu", (unsigned long)bgTask);
     }
     else
-        NSLog(@"Timer isn't running, allow background!");
+        NSLog(@"applicationWillResignActive: Timer isn't running, allow background!");
 }
 
 
@@ -49,7 +52,7 @@
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     
-    NSLog(@"Application entered background state.");
+    NSLog(@"applicationDidEnterBackground called.");
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
@@ -57,6 +60,7 @@
     //    [self triggerAlert:application alertString:@"applicationWillEnterForeground!" ];
     //    [self triggerNotification:application alertString:@"applicationWillEnterForeground!" ];
     // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    NSLog(@"applicationWillEnterForeground called.");
 }
 
 - (void)triggerAlert:(UIApplication *)application alertString:(NSString *)alertString
@@ -75,6 +79,7 @@
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     [[UIApplication sharedApplication] clearKeepAliveTimeout];
+    NSLog(@"applicationDidBecomeActive called.");
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
