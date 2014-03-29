@@ -187,7 +187,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
     NSLog(@"Minimum Step Count = %ld", (long)row);
     [[NSUserDefaults standardUserDefaults] setInteger:row forKey:MINIMUM_STEPS_KEY];
     [[NSUserDefaults standardUserDefaults] synchronize];
-    [self writeLog:@"OMG MIN STEP COUNT"];
+    //[self writeLog:@"OMG MIN STEP COUNT"];
 }
 
 //none of this shit works. i'm trying to make a picker that just shows a bunch of numbers for the "minimumStepCount"
@@ -248,6 +248,8 @@ UIBackgroundTaskIdentifier bgTask = 0;
     return true;
 }
 
+NSTimer *countDownTimerChecker;
+
 -(void)startTimerAction:(NSTimeInterval)timeout
 {
     NSLog(@"startTimerAction backgroundTask: for %f seconds!", timeout);
@@ -269,19 +271,52 @@ UIBackgroundTaskIdentifier bgTask = 0;
                                           repeats:NO];
         
         [[NSRunLoop mainRunLoop] addTimer:countDownTimer forMode:NSDefaultRunLoopMode];
+        
+        
+        if (countDownTimerChecker != nil) {
+            if([countDownTimerChecker isValid]){
+                [countDownTimerChecker invalidate];
+            }
+            countDownTimerChecker = nil;
+        }
+        
+        countDownTimerChecker = [NSTimer timerWithTimeInterval:10
+                                                 target:self
+                                               selector:@selector(timerAlarmChecker)
+                                               userInfo:nil
+                                                repeats:YES];
+        
+        [[NSRunLoop mainRunLoop] addTimer:countDownTimerChecker forMode:NSDefaultRunLoopMode];
+
         //[countDownTimer fire];
 //        NSLog(@"Countdown Timer started, and it's = %p", countDownTimer);
     });
 }
 
+
+-(void)timerAlarmChecker
+{
+    NSDate *now = [NSDate date];
+    NSTimeInterval timeout = -[now timeIntervalSinceDate:countDownTimer.fireDate];
+    UIApplication*    app = [UIApplication sharedApplication];
+    NSLog(@"Made it into the timerAlarmChecker. Time Until Background: %f, Alarm: %f", [app backgroundTimeRemaining], timeout);
+}
+
+
 -(void)timerAlarmHandler
 {
-    NSLog(@"Made it into the timerAlarmHandler initiating counter Query with notifications and invalidating background task!");
+    NSLog(@"Made it into the timerAlarmHandler initiating counter Query with notifications and recreating background task!");
     [self initiateCounterQuery:true];
 
     UIApplication*    app = [UIApplication sharedApplication];
-    [app endBackgroundTask:bgTask];
-    bgTask = UIBackgroundTaskInvalid;
+//    [app endBackgroundTask:bgTask];
+//    bgTask = UIBackgroundTaskInvalid;
+
+    bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
+        [app endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
+
 }
 
 //FOUNDATION_EXPORT void NSLog(NSString *format, ...) NS_FORMAT_FUNCTION(1,2);

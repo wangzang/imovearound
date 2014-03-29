@@ -31,14 +31,14 @@
 
     if (countDownTimer != nil)
     {
-        NSLog(@"applicationWillResignActive: Timer still going, add background task!");
-        UIBackgroundTaskIdentifier bgTask;
-        UIApplication  *app = [UIApplication sharedApplication];
-//        NSLog(@"bgTask: %lu", (unsigned long)bgTask);
-        bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
-            [app endBackgroundTask:bgTask];
-        }];
-        NSLog(@"bgTask after: %lu", (unsigned long)bgTask);
+//        NSLog(@"applicationWillResignActive: Timer still going, add background task!");
+//        __block UIBackgroundTaskIdentifier bgTask = 0;
+//        UIApplication  *app = [UIApplication sharedApplication];
+////        NSLog(@"bgTask: %lu", (unsigned long)bgTask);
+//        bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
+//            [app endBackgroundTask:bgTask];
+//        }];
+//        NSLog(@"bgTask after: %lu", (unsigned long)bgTask);
     }
     else
         NSLog(@"applicationWillResignActive: Timer isn't running, allow background!");
