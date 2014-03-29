@@ -250,7 +250,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
 
 -(void)startTimerAction:(NSTimeInterval)timeout
 {
-    NSLog(@"startTimerAction: for %f seconds!", timeout);
+    NSLog(@"startTimerAction backgroundTask: for %f seconds!", timeout);
 
     /* this should be getting done when the app goes to shut down and sees that a timer is still active.*/
     UIApplication*    app = [UIApplication sharedApplication];
@@ -276,7 +276,7 @@ UIBackgroundTaskIdentifier bgTask = 0;
 
 -(void)timerAlarmHandler
 {
-//    NSLog(@"Made it into the timerAlarmHandler initiating counter Query with notifications!");
+    NSLog(@"Made it into the timerAlarmHandler initiating counter Query with notifications and invalidating background task!");
     [self initiateCounterQuery:true];
 
     UIApplication*    app = [UIApplication sharedApplication];
